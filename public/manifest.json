@@ -1,0 +1,17 @@
+{
+  "name": "DoudouVizion - Média Center",
+  "short_name": "DoudouVizion",
+  "description": "Média center tactile pour enfants",
+  "start_url": "/",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "theme_color": "#ff0080",
+  "background_color": "#0a0a0a",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiByeD0iMjQiIGZpbGw9IiNmZjAwODAiLz4KPHN2ZyB4PSI0OCIgeT0iNDgiIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJ3aGl0ZSI+CjxwYXRoIGQ9Ik0xMiAzYzQuOTYgMCA5IDQuMDQgOSA5djEwYzAgNC45Ni00LjA0IDktOSA5cy05LTQuMDQtOS05VjEyYzAtNC45NiA0LjA0LTkgOS05em0wIDJjLTMuODYgMC03IDMuMTQtNyA3djEwYzAgMy44NiAzLjE0IDcgNyA3czctMy4xNCA3LTdWMTJjMC0zLjg2LTMuMTQtNy03LTd6Ii8+CjxwYXRoIGQ9Ik0xNi41IDEyYzAgMi40OC0yLjAyIDQuNS00LjUgNC41cy00LjUtMi4wMi00LjUtNC41UzkuMDIgNy41IDExLjUgNy41czQuNSAyLjAyIDQuNSA0LjV6Ii8+Cjwvc3ZnPgo8L3N2Zz4K",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}
