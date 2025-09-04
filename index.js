@@ -52,6 +52,30 @@ function scanMusicDirectory(dirPath, relativePath = '') {
     return { items, folders };
 }
 
+app.use('/gifs', express.static('gif'));
+
+// API pour lister les GIFs disponibles
+app.get('/api/gifs', (req, res) => {
+    const gifDir = path.join(__dirname, 'gif');
+    
+    try {
+        if (!fs.existsSync(gifDir)) {
+            return res.json({ gifs: [] });
+        }
+        
+        const files = fs.readdirSync(gifDir);
+        const gifFiles = files.filter(file => {
+            const ext = path.extname(file).toLowerCase();
+            return ext === '.gif';
+        });
+        
+        res.json({ gifs: gifFiles });
+    } catch (error) {
+        console.error('Erreur lors du scan du dossier GIF:', error);
+        res.status(500).json({ error: 'Erreur lors du scan du dossier GIF' });
+    }
+});
+
 // API pour lister les musiques et dossiers
 app.get('/api/music', (req, res) => {
     const folder = req.query.folder || '';
@@ -94,10 +118,17 @@ app.get('/music/:filename(*)', (req, res) => {
     }
 });
 
-// Route principale
 app.get('/', (req, res) => {
+    console.log('Detection');
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
+app.get('/library', (req, res) => {
+    console.log('Library');
+    res.sendFile(path.join(__dirname, 'public', 'library.html'));
+});
+
+
 
 app.listen(PORT, () => {
     console.log(`🎵 Média center démarré sur http://localhost:${PORT}`);

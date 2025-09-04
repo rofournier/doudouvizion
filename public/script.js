@@ -16,7 +16,7 @@ class MediaCenter {
         this.folders = [];
         this.currentFolder = '';
         this.isGifVisible = false;
-        this.giphyApiKey = 'm4RN7hKHt1rs93ozepEXWHVFpM6WtMQ4';
+        this.availableGifs = [];
         
         this.init();
     }
@@ -25,6 +25,7 @@ class MediaCenter {
         this.setupEventListeners();
         this.loadMusicList();
         this.setupAudioPlayer();
+        this.loadAvailableGifs();
     }
 
     async checkBluetoothPermission() {
@@ -306,13 +307,17 @@ class MediaCenter {
     
     async showGifOverlay() {
         try {
-            const gifUrl = await this.getRandomFortniteGif();
-            this.gifImage.src = gifUrl;
-            this.gifOverlay.style.display = 'flex';
-            this.isGifVisible = true;
-            
-            // Mettre à jour le bouton toggle
-            this.gifToggleBtn.classList.add('playing');
+            const gifUrl = this.getRandomLocalGif();
+            if (gifUrl) {
+                this.gifImage.src = gifUrl;
+                this.gifOverlay.style.display = 'flex';
+                this.isGifVisible = true;
+                
+                // Mettre à jour le bouton toggle
+                this.gifToggleBtn.classList.add('playing');
+            } else {
+                console.log('Aucun GIF local disponible');
+            }
         } catch (error) {
             console.error('Erreur lors du chargement du GIF:', error);
         }
@@ -332,38 +337,26 @@ class MediaCenter {
         }
     }
     
-    async getRandomFortniteGif() {
+    async loadAvailableGifs() {
         try {
-            const offset = Math.floor(Math.random() * 50); // GIPHY a une limite de 4999
-            const recherches = [
-                'fortnite%20dance',
-                'fonky%20dance',
-                'sigma',
-                'monkey',
-                'trollface',
-                'fail'
-            ]
-            const response = await fetch(
-                `https://api.giphy.com/v1/gifs/search?api_key=${this.giphyApiKey}&q=${recherches[Math.floor(Math.random() * recherches.length)]}&limit=1&offset=${offset}&rating=g&lang=en`
-            );
-            
-            if (!response.ok) {
-                throw new Error('Erreur lors de la récupération du GIF');
-            }
-            
+            const response = await fetch('/api/gifs');
             const data = await response.json();
-            
-            if (data.data && data.data.length > 0) {
-                // Utiliser l'URL fixed_height pour une taille optimale
-                return data.data[0].images.fixed_height.url;
-            } else {
-                throw new Error('Aucun GIF trouvé');
-            }
+            this.availableGifs = data.gifs || [];
+            console.log(`GIFs disponibles: ${this.availableGifs.length}`);
         } catch (error) {
-            console.error('Erreur GIPHY:', error);
-            // Retourner un GIF par défaut en cas d'erreur
-            return 'https://media.giphy.com/media/3o7abKhOpu0NwenH3O/giphy.gif';
+            console.error('Erreur lors du chargement des GIFs:', error);
+            this.availableGifs = [];
         }
+    }
+    
+    getRandomLocalGif() {
+        if (this.availableGifs.length === 0) {
+            return null;
+        }
+        
+        const randomIndex = Math.floor(Math.random() * this.availableGifs.length);
+        const gifFilename = this.availableGifs[randomIndex];
+        return `/gifs/${gifFilename}`;
     }
     
     togglePlayPause() {
