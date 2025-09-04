@@ -25,7 +25,7 @@ class MediaCenter {
         this.setupEventListeners();
         this.loadMusicList();
         this.setupAudioPlayer();
-        this.loadAvailableGifs();
+        // this.loadAvailableGifs();
     }
 
     async checkBluetoothPermission() {
@@ -50,8 +50,8 @@ class MediaCenter {
         });
         
         // Contrôle de l'overlay GIF
-        this.gifToggleBtn.addEventListener('click', () => this.toggleGifOverlay());
-        this.gifOverlay.addEventListener('click', () => this.hideGifOverlay());
+        // this.gifToggleBtn.addEventListener('click', () => this.toggleGifOverlay());
+        // this.gifOverlay.addEventListener('click', () => this.hideGifOverlay());
         
         // Gestion des événements tactiles
         this.setupTouchEvents();
@@ -297,7 +297,7 @@ class MediaCenter {
             await this.audioPlayer.play();
             
             // Afficher l'overlay GIF
-            this.showGifOverlay();
+            // this.showGifOverlay();
             
         } catch (error) {
             console.error('Erreur lors de la lecture:', error);
