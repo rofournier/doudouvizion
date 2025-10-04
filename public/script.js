@@ -5,11 +5,11 @@ class MediaCenter {
         this.stopBtn = document.getElementById('stopBtn');
         this.volumeSlider = document.getElementById('volumeSlider');
         this.currentTrackDisplay = document.getElementById('currentTrackDisplay');
+        this.playlistProgress = document.getElementById('playlistProgress');
+        this.playlistIndicator = document.getElementById('playlistIndicator');
         this.musicGrid = document.getElementById('musicGrid');
         this.folderList = document.getElementById('folderList');
-        this.gifToggleBtn = document.getElementById('gifToggleBtn');
-        this.gifOverlay = document.getElementById('gifOverlay');
-        this.gifImage = document.getElementById('gifImage');
+        this.nextBtn = document.getElementById('nextBtn');
         
         this.currentMusic = null;
         this.musicList = [];
@@ -18,6 +18,13 @@ class MediaCenter {
         this.isGifVisible = false;
         this.availableGifs = [];
         
+        // Nouvelles propriétés pour la v2
+        this.currentPlaylist = [];
+        this.currentTrackIndex = 0;
+        this.isPlaylistMode = false;
+        this.allFolders = [];
+        this.currentFolderIndex = 0;
+        
         this.init();
     }
     
@@ -25,7 +32,6 @@ class MediaCenter {
         this.setupEventListeners();
         this.loadMusicList();
         this.setupAudioPlayer();
-        // this.loadAvailableGifs();
     }
 
     async checkBluetoothPermission() {
@@ -43,15 +49,12 @@ class MediaCenter {
         // Contrôles de lecture
         this.playPauseBtn.addEventListener('click', () => this.togglePlayPause());
         this.stopBtn.addEventListener('click', () => this.stop());
+        this.nextBtn.addEventListener('click', () => this.playNextTrack());
         
         // Contrôle du volume
         this.volumeSlider.addEventListener('input', (e) => {
             this.audioPlayer.volume = e.target.value / 100;
         });
-        
-        // Contrôle de l'overlay GIF
-        // this.gifToggleBtn.addEventListener('click', () => this.toggleGifOverlay());
-        // this.gifOverlay.addEventListener('click', () => this.hideGifOverlay());
         
         // Gestion des événements tactiles
         this.setupTouchEvents();
@@ -150,7 +153,9 @@ class MediaCenter {
             // Charger la liste des dossiers seulement au premier appel
             if (!this.folders.length) {
                 this.folders = data.folders || [];
+                this.allFolders = [{ name: 'Dossier principal', path: '' }, ...this.folders];
                 this.renderFolderList();
+                this.buildCompletePlaylist();
             } else {
                 // Mettre à jour seulement l'état actif
                 this.updateFolderListActiveState();
@@ -161,6 +166,36 @@ class MediaCenter {
             console.error('Erreur:', error);
             this.showError('Erreur lors du chargement des musiques');
         }
+    }
+    
+    async buildCompletePlaylist() {
+        this.currentPlaylist = [];
+        this.currentTrackIndex = 0;
+        
+        for (let i = 0; i < this.allFolders.length; i++) {
+            const folder = this.allFolders[i];
+            try {
+                const url = folder.path ? `/api/music?folder=${encodeURIComponent(folder.path)}` : '/api/music';
+                const response = await fetch(url);
+                if (response.ok) {
+                    const data = await response.json();
+                    const musicFiles = data.music || [];
+                    
+                    // Ajouter chaque musique avec son dossier d'origine
+                    musicFiles.forEach(music => {
+                        this.currentPlaylist.push({
+                            ...music,
+                            folderName: folder.name,
+                            folderPath: folder.path
+                        });
+                    });
+                }
+            } catch (error) {
+                console.error(`Erreur lors du chargement du dossier ${folder.name}:`, error);
+            }
+        }
+        
+        console.log(`Playlist complète créée: ${this.currentPlaylist.length} musiques`);
     }
     
     renderMusicGrid() {
@@ -280,12 +315,17 @@ class MediaCenter {
     
     async playMusic(filename) {
         try {
-            const music = this.musicList.find(m => m.filename === filename);
-            if (!music) {
-                throw new Error('Musique non trouvée');
+            // Trouver la musique dans la playlist complète
+            const musicIndex = this.currentPlaylist.findIndex(m => m.filename === filename);
+            if (musicIndex === -1) {
+                throw new Error('Musique non trouvée dans la playlist');
             }
             
-            this.currentMusic = music;
+            // Activer le mode playlist et définir l'index actuel
+            this.isPlaylistMode = true;
+            this.currentTrackIndex = musicIndex;
+            this.currentMusic = this.currentPlaylist[musicIndex];
+            
             this.audioPlayer.src = `/music/${filename}`;
             
             // Mettre à jour l'affichage
@@ -296,68 +336,12 @@ class MediaCenter {
             await this.audioPlayer.load();
             await this.audioPlayer.play();
             
-            // Afficher l'overlay GIF
-            // this.showGifOverlay();
-            
         } catch (error) {
             console.error('Erreur lors de la lecture:', error);
             this.showError('Erreur lors de la lecture de la musique');
         }
     }
     
-    async showGifOverlay() {
-        try {
-            const gifUrl = this.getRandomLocalGif();
-            if (gifUrl) {
-                this.gifImage.src = gifUrl;
-                this.gifOverlay.style.display = 'flex';
-                this.isGifVisible = true;
-                
-                // Mettre à jour le bouton toggle
-                this.gifToggleBtn.classList.add('playing');
-            } else {
-                console.log('Aucun GIF local disponible');
-            }
-        } catch (error) {
-            console.error('Erreur lors du chargement du GIF:', error);
-        }
-    }
-    
-    hideGifOverlay() {
-        this.gifOverlay.style.display = 'none';
-        this.isGifVisible = false;
-        this.gifToggleBtn.classList.remove('playing');
-    }
-    
-    toggleGifOverlay() {
-        if (this.isGifVisible) {
-            this.hideGifOverlay();
-        } else if (this.currentMusic && !this.audioPlayer.paused) {
-            this.showGifOverlay();
-        }
-    }
-    
-    async loadAvailableGifs() {
-        try {
-            const response = await fetch('/api/gifs');
-            const data = await response.json();
-            this.availableGifs = data.gifs || [];
-            console.log(`GIFs disponibles: ${this.availableGifs.length}`);
-        } catch (error) {
-            console.error('Erreur lors du chargement des GIFs:', error);
-            this.availableGifs = [];
-        }
-    }
-    
-    getRandomLocalGif() {
-        if (this.availableGifs.length === 0) {
-            return null;
-        }
-        
-        const randomIndex = Math.floor(Math.random() * this.availableGifs.length);
-        const gifFilename = this.availableGifs[randomIndex];
-        return `/gifs/${gifFilename}`;
-    }
     
     togglePlayPause() {
         if (this.audioPlayer.paused) {
@@ -371,7 +355,7 @@ class MediaCenter {
         this.audioPlayer.pause();
         this.audioPlayer.currentTime = 0;
         this.updatePlayPauseButton(false);
-        this.hideGifOverlay();
+        this.isPlaylistMode = false;
     }
     
     updatePlayPauseButton(isPlaying) {
@@ -391,10 +375,24 @@ class MediaCenter {
     updateNowPlaying() {
         if (!this.currentMusic) {
             this.currentTrackDisplay.textContent = 'Aucune musique';
+            this.updatePlaylistProgress();
             return;
         }
         
         this.currentTrackDisplay.textContent = this.formatMusicName(this.currentMusic.name);
+        this.updatePlaylistProgress();
+    }
+    
+    updatePlaylistProgress() {
+        if (this.isPlaylistMode && this.currentPlaylist.length > 0) {
+            const currentIndex = this.currentTrackIndex + 1;
+            const totalTracks = this.currentPlaylist.length;
+            this.playlistProgress.textContent = `${currentIndex} / ${totalTracks}`;
+            this.playlistIndicator.style.display = 'inline';
+        } else {
+            this.playlistProgress.textContent = '0 / 0';
+            this.playlistIndicator.style.display = 'none';
+        }
     }
     
     updateMusicGridSelection(filename) {
@@ -412,9 +410,113 @@ class MediaCenter {
     }
     
     handleTrackEnd() {
-        // Masquer l'overlay GIF quand la musique se termine
-        this.hideGifOverlay();
         this.updatePlayPauseButton(false);
+        
+        // Si on est en mode playlist, passer à la suivante
+        if (this.isPlaylistMode) {
+            this.playNextTrack();
+        }
+    }
+    
+    async playNextTrack() {
+        if (this.currentTrackIndex < this.currentPlaylist.length - 1) {
+            // Passer à la musique suivante
+            this.currentTrackIndex++;
+            const nextMusic = this.currentPlaylist[this.currentTrackIndex];
+            
+            try {
+                this.currentMusic = nextMusic;
+                this.audioPlayer.src = `/music/${nextMusic.filename}`;
+                
+                // Mettre à jour l'affichage
+                this.updateNowPlaying();
+                this.updateMusicGridSelection(nextMusic.filename);
+                
+                // Charger et jouer
+                await this.audioPlayer.load();
+                await this.audioPlayer.play();
+                
+                console.log(`Passage à la musique suivante: ${nextMusic.name}`);
+            } catch (error) {
+                console.error('Erreur lors du passage à la musique suivante:', error);
+                // Essayer la suivante
+                this.playNextTrack();
+            }
+        } else {
+            // Fin de la playlist, passer au dossier suivant
+            this.moveToNextFolder();
+        }
+    }
+    
+    async moveToNextFolder() {
+        if (this.currentFolderIndex < this.allFolders.length - 1) {
+            this.currentFolderIndex++;
+            const nextFolder = this.allFolders[this.currentFolderIndex];
+            
+            console.log(`Passage au dossier suivant: ${nextFolder.name}`);
+            
+            // Charger le nouveau dossier
+            await this.loadMusicList(nextFolder.path);
+            
+            // Reconstruire la playlist à partir du nouveau dossier
+            await this.buildCompletePlaylist();
+            
+            // Jouer la première musique du nouveau dossier
+            if (this.currentPlaylist.length > 0) {
+                this.currentTrackIndex = 0;
+                const firstMusic = this.currentPlaylist[0];
+                
+                try {
+                    this.currentMusic = firstMusic;
+                    this.audioPlayer.src = `/music/${firstMusic.filename}`;
+                    
+                    // Mettre à jour l'affichage
+                    this.updateNowPlaying();
+                    this.updateMusicGridSelection(firstMusic.filename);
+                    
+                // Charger et jouer
+                await this.audioPlayer.load();
+                await this.audioPlayer.play();
+                    
+                    console.log(`Première musique du nouveau dossier: ${firstMusic.name}`);
+                } catch (error) {
+                    console.error('Erreur lors de la lecture de la première musique:', error);
+                }
+            }
+        } else {
+            // Fin de tous les dossiers, revenir au début
+            console.log('Fin de tous les dossiers, retour au début');
+            this.currentFolderIndex = 0;
+            this.currentTrackIndex = 0;
+            
+            // Charger le premier dossier
+            await this.loadMusicList('');
+            
+            // Reconstruire la playlist complète
+            await this.buildCompletePlaylist();
+            
+            // Jouer la première musique
+            if (this.currentPlaylist.length > 0) {
+                const firstMusic = this.currentPlaylist[0];
+                
+                try {
+                    this.currentMusic = firstMusic;
+                    this.audioPlayer.src = `/music/${firstMusic.filename}`;
+                    
+                    // Mettre à jour l'affichage
+                    this.updateNowPlaying();
+                    this.updateMusicGridSelection(firstMusic.filename);
+                    
+                // Charger et jouer
+                await this.audioPlayer.load();
+                await this.audioPlayer.play();
+                    
+                    console.log(`Retour au début: ${firstMusic.name}`);
+                } catch (error) {
+                    console.error('Erreur lors du retour au début:', error);
+                }
+            }
+        }
     }
     
     showError(message) {

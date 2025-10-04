@@ -119,14 +119,14 @@ app.get('/music/:filename(*)', (req, res) => {
 });
 
 app.get('/', (req, res) => {
-    console.log('Detection');
+    console.log('DoudouVizion v2');
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.get('/library', (req, res) => {
-    console.log('Library');
-    res.sendFile(path.join(__dirname, 'public', 'library.html'));
-});
+// app.get('/library', (req, res) => {
+//     console.log('Library');
+//     res.sendFile(path.join(__dirname, 'public', 'library.html'));
+// });
 
 
 
