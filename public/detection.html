@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Face Detection - Security System</title>
+    <link rel="stylesheet" href="detection.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="security-container">
+        <!-- HUD Elements -->
+        <div class="hud-corner top-left"></div>
+        <div class="hud-corner top-right"></div>
+        <div class="hud-corner bottom-left"></div>
+        <div class="hud-corner bottom-right"></div>
+        
+        <!-- HUD Lines -->
+        <div class="hud-line horizontal top"></div>
+        <div class="hud-line horizontal bottom"></div>
+        <div class="hud-line vertical left"></div>
+        <div class="hud-line vertical right"></div>
+        
+        <!-- Header -->
+        <header class="security-header">
+            <div class="system-status">
+                <div class="status-indicator active">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>SYSTÈME ACTIF</span>
+                </div>
+                <div class="timestamp" id="timestamp">
+                    <i class="fas fa-clock"></i>
+                    <span id="currentTime">--:--:--</span>
+                </div>
+            </div>
+            <h1 class="system-title">
+                <i class="fas fa-user-shield"></i>
+                FACE DETECTION SYSTEM
+            </h1>
+            <div class="scan-status">
+                <div class="scan-indicator" id="scanIndicator">
+                    <i class="fas fa-search"></i>
+                    <span>SCAN EN COURS...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Camera Feed -->
+        <main class="camera-feed-container">
+            <div class="camera-frame">
+                <video id="videoElement" autoplay muted playsinline></video>
+                <canvas id="canvasElement" style="display: none;"></canvas>
+                
+                <!-- Scanning Overlay -->
+                <div class="scanning-overlay">
+                    <div class="scan-line"></div>
+                    <div class="scan-circle">
+                        <div class="circle-ring outer"></div>
+                        <div class="circle-ring middle"></div>
+                        <div class="circle-ring inner"></div>
+                    </div>
+                </div>
+                
+                <!-- Face Detection Box -->
+                <div class="face-detection-box" id="faceBox" style="display: none;">
+                    <div class="corner-marker top-left"></div>
+                    <div class="corner-marker top-right"></div>
+                    <div class="corner-marker bottom-left"></div>
+                    <div class="corner-marker bottom-right"></div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer Info -->
+        <footer class="security-footer">
+            <div class="info-panel">
+                <div class="info-item">
+                    <i class="fas fa-eye"></i>
+                    <span>CAMÉRA ACTIVE</span>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-brain"></i>
+                    <span>IA DÉTECTION</span>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-database"></i>
+                    <span>BASE DE DONNÉES</span>
+                </div>
+            </div>
+            <div class="access-status">
+                <div class="access-indicator" id="accessIndicator">
+                    <i class="fas fa-lock"></i>
+                    <span>ACCÈS VERROUILLÉ</span>
+                </div>
+            </div>
+        </footer>
+
+        <!-- Loading Screen -->
+        <div class="loading-screen" id="loadingScreen">
+            <div class="loading-content">
+                <div class="loading-spinner"></div>
+                <h2>INITIALISATION DU SYSTÈME</h2>
+                <p>Chargement des modules de détection...</p>
+            </div>
+        </div>
+
+        <!-- Camera Permission Request -->
+        <div class="permission-request" id="permissionRequest" style="display: none;">
+            <div class="permission-content">
+                <i class="fas fa-camera"></i>
+                <h2>ACCÈS CAMÉRA REQUIS</h2>
+                <p>Le système de détection faciale nécessite l'accès à votre caméra.</p>
+                <button id="enableCameraBtn" class="permission-btn">
+                    <i class="fas fa-check"></i>
+                    AUTORISER L'ACCÈS
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="detection.js"></script>
+</body>
+</html>
